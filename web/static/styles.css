@@ -1,0 +1,42 @@
+.container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-around;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+}
+
+.card {
+    min-width: 10%;
+    margin: 10px;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+}
+
+.card h2 {
+    text-align: center;
+}
+
+.card .status {
+    text-align: center;
+}
+
+
+.status {
+    overflow-wrap: normal;
+    min-height: 50px;
+}
+
+#status-text {
+    font-weight: bold;
+    margin: 30px;
+}
+
+#myChart {
+    width: 100%;
+    max-width: 1200px;
+    align-content: center;
+    
+    /* height: 75%; */
+}

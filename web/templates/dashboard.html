@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>SpeedTest-Server</title>
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', path='images/speedo.png') }}">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', path='styles.css') }}">
+    <meta http-equiv="refresh" content="600">
+    <script  src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script> 
+</head>
+
+<body>
+    <h1>SpeedTest-Server Dashboard</h1>
+    <div class="container">
+        <div class="card">
+            <div class="status">Showing date range: <span id="status-text"> {{data[0]["dates"][0]}} to {{data[0]["dates"][-1]}}</span></div>
+        </div>
+    </div>
+    
+    <br>
+    
+    <div class="container">
+        <canvas id="myChart" style="width: 80%; max-width:1400px;"></canvas>
+    </div>
+</body>
+
+<!-- JavaScript code to create the chart -->
+<script>
+    const new_data = {{data[0]|tojson}}; 
+    const xValues = new_data["dates"]
+    const yDownload = new_data["downloads"]
+    const yUpload = new_data["uploads"]
+
+    new Chart("myChart", {
+        type: "line",
+        title: "SpeedTest Results",
+        // resizes the chart to fit the window
+        responsive: true,
+        
+        data: {
+            labels: xValues,
+            datasets: [{
+                data: yDownload,
+                borderColor: "green",
+                label: "Downloads",
+                fill: false
+            },{
+                data: yUpload,
+                borderColor: "blue",
+                label: "Uploads",
+                fill: false
+            }]
+        },
+        options: {
+            legend: {
+                display: true,
+            },
+            scales: {
+                yAxes: [{
+                    scaleLabel: {
+                        display: true,
+                        labelString: 'Megabits per second (Mbps)'
+                    }
+                }],
+                xAxes: [{
+                    scaleLabel: {
+                        display: true,
+                        labelString: 'Datetime',
+                    },
+                    ticks: {
+                        autoSkip: true,
+                        maxTicksLimit: 30
+                    }
+                }],
+
+            },
+        }
+    });    
+
+
+    
+    // function to turn on LEDs
+    function test_fun(text, colour) {
+        fetch('/server/path/' + colour + ':' + text.substring(3))
+            .then(response => {
+                // console.log(response)
+                response.json().then(value => {
+                    console.log(value)
+                    if (value["success"] != true) {
+                        // error 
+                        console.log("ERROR: " + value)
+                        err = true
+                    } else {
+                        // update UI
+                        //reload 
+                        location.reload()
+                    }
+                })
+            })
+            .catch(error => console.error(error));
+    }
+
+</script>
