@@ -392,3 +392,63 @@ Idle Latency:     4.15 ms   (jitter: 1.55ms, low: 3.65ms, high: 6.73ms)
                  28.42 ms   (jitter: 29.74ms, low: 4.73ms, high: 256.53ms)
  Packet Loss:     0.0%
   Result URL: https://www.speedtest.net/result/c/eaee471b-4068-4287-b577-14bb678470e8
+
+~~~~~
+Date: 22-09-2024 17:02:39
+
+   Speedtest by Ookla
+
+      Server: APNIC Pty Ltd - Brisbane (id: 18473)
+         ISP: Southern Phone Company
+Idle Latency:     4.61 ms   (jitter: 0.44ms, low: 4.17ms, high: 5.05ms)
+    Download:    85.27 Mbps (data used: 122.4 MB)                                                   
+                 12.06 ms   (jitter: 12.09ms, low: 4.28ms, high: 239.52ms)
+      Upload:    19.06 Mbps (data used: 10.8 MB)                                                   
+                 40.22 ms   (jitter: 23.94ms, low: 4.88ms, high: 238.22ms)
+ Packet Loss: Not available.
+  Result URL: https://www.speedtest.net/result/c/e0118426-4ad0-4699-b589-0ba2786f78da
+
+~~~~~
+Date: 22-09-2024 17:12:59
+
+   Speedtest by Ookla
+
+      Server: AARNet - Brisbane (id: 6119)
+         ISP: Southern Phone Company
+Idle Latency:     4.13 ms   (jitter: 0.36ms, low: 3.59ms, high: 4.52ms)
+    Download:    99.81 Mbps (data used: 139.1 MB)                                                   
+                  6.50 ms   (jitter: 12.84ms, low: 3.58ms, high: 226.36ms)
+      Upload:    18.79 Mbps (data used: 16.0 MB)                                                   
+                 62.43 ms   (jitter: 35.58ms, low: 4.38ms, high: 443.70ms)
+ Packet Loss:     0.0%
+  Result URL: https://www.speedtest.net/result/c/cef6cb6f-dbd3-415e-9f59-5b10d3c597d8
+
+~~~~~
+Date: 22-09-2024 17:23:21
+
+   Speedtest by Ookla
+
+      Server: AARNet - Brisbane (id: 6119)
+         ISP: Southern Phone Company
+Idle Latency:     4.07 ms   (jitter: 0.24ms, low: 3.68ms, high: 4.60ms)
+    Download:   104.23 Mbps (data used: 186.1 MB)                                                   
+                  6.69 ms   (jitter: 14.77ms, low: 3.68ms, high: 338.83ms)
+      Upload:    18.88 Mbps (data used: 17.6 MB)                                                   
+                 81.24 ms   (jitter: 50.66ms, low: 4.61ms, high: 482.90ms)
+ Packet Loss:     0.0%
+  Result URL: https://www.speedtest.net/result/c/04071c82-c920-4fca-9ba6-d3fa799b54ca
+
+~~~~~
+Date: 22-09-2024 17:33:47
+
+   Speedtest by Ookla
+
+      Server: Leaptel - Brisbane (id: 32880)
+         ISP: Southern Phone Company
+Idle Latency:     3.96 ms   (jitter: 0.07ms, low: 3.87ms, high: 4.00ms)
+    Download:   105.84 Mbps (data used: 61.5 MB)                                                   
+                  7.69 ms   (jitter: 14.84ms, low: 4.90ms, high: 220.69ms)
+      Upload:    19.05 Mbps (data used: 33.5 MB)                                                   
+                 97.41 ms   (jitter: 54.65ms, low: 4.52ms, high: 1419.53ms)
+ Packet Loss:     0.0%
+  Result URL: https://www.speedtest.net/result/c/d529ea98-07a0-45e8-ad7e-66bf8563d1d4
