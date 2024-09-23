@@ -55,7 +55,7 @@ def run_speed_test(interval: int) -> None:
         
         
         # loop every 60 seconds
-        print(f"Speedtest complete. Sleeping for {interval} seconds...")
+        print(f"Speedtest complete at {datetime.now()}. Sleeping for {interval} seconds...")
         sleep(interval)
     
     # Done
