@@ -59,7 +59,7 @@
 <!-- ABOUT THE PROJECT -->
 ## About The Project
 
-[![Product Name Screen Shot][product-screenshot]](https://example.com)
+[![Graph example][product-screenshot]](https://example.com)
 
 This project generates a continous timed event where Speedtest (CLI version) is used to gather download and upload information. The reults are saved to a simple text file before being plotted on a FastApi endpoint. The test file is used as the time period should not exceed a few months. The program will automatically delete old data from the same file.
 
@@ -177,5 +177,5 @@ Project Link: [https://github.com/your_username/repo_name](https://github.com/yo
 [license-url]: https://github.com/gilbo123/BackgroundSpeedTest/blob/master/LICENSE.txt
 [linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=flat-square&logo=linkedin&colorB=555
 [linkedin-url]: https://linkedin.com
-[product-screenshot]: images/screenshot.png
+[product-screenshot]: web/static/images/graph.png
 [fastapi-url]: https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi
