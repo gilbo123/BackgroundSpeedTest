@@ -1,7 +1,4 @@
 
-1. pip install -r requiremets.txt
-2. 
-
 <!-- PROJECT SHIELDS -->
 <!--
 *** I'm using markdown "reference style" links for readability.
@@ -21,7 +18,7 @@
 <br />
 <p align="center">
   <a href="https://github.com/gilbo123/BackgroundSpeedTest">
-    <img src="images/logo.png" alt="Logo" width="80" height="80">
+    <img src="web/static/images/speedo.png" alt="Logo" width="80" height="80">
   </a>
 
   <h3 align="center">Background Speed Test Server</h3>
@@ -72,8 +69,10 @@ Features:
 * Adjustable period and frequency.
 
 ### Built With
-This section should list any major frameworks that you built your project using. Leave any add-ons/plugins for the acknowledgements section. Here are a few examples.
-* [FastAPI](https://fastapi.tiangolo.com/)
+
+Frameworks used in the application:
+
+* [FastAPI](https://fastapi.tiangolo.com/img/logo-margin/logo-teal.png)
 
 
 <!-- GETTING STARTED -->
