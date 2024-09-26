@@ -11,9 +11,10 @@ from fastapi.templating import Jinja2Templates
 
 import uvicorn
 
+
 def run_speed_test(interval: int) -> None:
     """Run the speedtest-cli and save the output to a file forever
-    
+
     This function will run the speedtest-cli and save the output to a file
     forever. The function will run every second. This is done to keep the
     data up to date. The function will run forever. The function will not
@@ -34,13 +35,17 @@ def run_speed_test(interval: int) -> None:
         os.system("touch web/static/speedtest.txt")
 
     sleep(1)
-    
+
     # Run the speedtest-cli and save the output to a file
     while True:
         print("Running speedtest. Please wait....")
         try:
-            result: int = os.system("printf '\n~~~~~\nDate: ' >> web/static/speedtest.txt")
-            result: int = os.system("date '+%d-%m-%Y %H:%M:%S' >> web/static/speedtest.txt")
+            result: int = os.system(
+                "printf '\n~~~~~\nDate: ' >> web/static/speedtest.txt"
+            )
+            result: int = os.system(
+                "date '+%d-%m-%Y %H:%M:%S' >> web/static/speedtest.txt"
+            )
             result: int = os.system("speedtest >> web/static/speedtest.txt")
             if result == 0:
                 # command ran successfully
@@ -52,28 +57,30 @@ def run_speed_test(interval: int) -> None:
                 print(f"Error running speedtest. Return code: {result}")
         except Exception as e:
             print(f"Error running speedtest: {e}")
-        
-        
+
         # loop every 60 seconds
-        print(f"Speedtest complete at {datetime.now()}. Sleeping for {interval} seconds...")
+        print(
+            f"Speedtest complete at {datetime.now()}. Sleeping for {interval} seconds..."
+        )
         sleep(interval)
-    
+
     # Done
     print("Exiting speedtest thread...")
 
+
 def parse_text_file():
     """
-        Parse the text file (speedtest.txt) and find the all the 
-        Values for the Keys 'Date:', 'Upload', and 'Download'. 
-        Return the list of mappings with datetime and values.
-        
-        Args:
-            None
-                
-        Returns:
-            list[dict[str, Any]]: List of mappings with datetime and values
-            
-        """
+    Parse the text file (speedtest.txt) and find the all the
+    Values for the Keys 'Date:', 'Upload', and 'Download'.
+    Return the list of mappings with datetime and values.
+
+    Args:
+        None
+
+    Returns:
+        list[dict[str, Any]]: List of mappings with datetime and values
+
+    """
 
     # open the file
     with open("web/static/speedtest.txt", "r") as file:
@@ -89,17 +96,17 @@ def parse_text_file():
     for chunk in chunks:
         # split the chunk into lines
         new_lines: list[str] = chunk.split("\n")
-        
+
         # check if the chunk has the correct number of lines
         if len(new_lines) < 3:
             continue
-        
+
         # get the values
         upload: str = ""
         download: str = ""
         date: str = ""
         for line in new_lines:
-            if line == '':
+            if line == "":
                 continue
             try:
                 if "Upload" in line:
@@ -113,20 +120,18 @@ def parse_text_file():
                     # change the formatting
                     date: str = dt.strftime("%d-%b-%y %H:%M:%S")
 
-                
                 # append the values to the data list
                 if upload != "" and download != "" and date != "":
                     dates.append(date)
                     uploads.append(float(upload))
                     downloads.append(float(download))
-            
 
             except Exception as e:
                 print(f"Error parsing line: {e}")
                 continue
-        
+
     # return the data
-    return dates, uploads, downloads 
+    return dates, uploads, downloads
 
 
 ###################################
@@ -173,12 +178,16 @@ MONTHS: int = opt.months_to_plot
 # Define routes and functions
 @app.get("/", response_class=HTMLResponse)
 async def read_root(request: Request):
-    """Root page. Controllino controls redndered in a Jinja Template."""
+    """Root page. Redndered in a Jinja Template."""
 
     # Get the data and send to TemplateRepsonse
-    dates, uploads, downloads = parse_text_file() 
+    dates, uploads, downloads = parse_text_file()
     return templates.TemplateResponse(
-        "dashboard.html", {"request": request, "data": [{"dates": dates, "uploads": uploads, "downloads": downloads}]}
+        "dashboard.html",
+        {
+            "request": request,
+            "data": [{"dates": dates, "uploads": uploads, "downloads": downloads}],
+        },
     )
 
 
