@@ -18,7 +18,7 @@
 <br />
 <p align="center">
   <a href="https://github.com/gilbo123/BackgroundSpeedTest">
-    <img src="web/static/images/speedo.png" alt="Logo" width="80" height="80">
+    <img src="web/static/images/speedo.png" alt="Logo" width="200" height="200">
   </a>
 
   <h3 align="center">Background Speed Test Server</h3>
@@ -71,6 +71,7 @@ Features:
 Frameworks used in the application:
 
 * [![FastAPI][fastapi-url]](http://fastapi.tiangolo.com)
+* [![ChartJS][chartjs-url]](https://www.chartjs.org)
 
 
 <!-- GETTING STARTED -->
@@ -177,3 +178,4 @@ Project Link: [https://github.com/your_username/repo_name](https://github.com/yo
 [linkedin-url]: https://linkedin.com
 [product-screenshot]: web/static/images/graph.png
 [fastapi-url]: https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi
+[chartjs-url]: https://img.shields.io/badge/Chart.js-FF6384?style=for-the-badge&logo=chartdotjs&logoColor=white
