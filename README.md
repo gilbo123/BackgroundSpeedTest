@@ -72,7 +72,7 @@ Features:
 
 Frameworks used in the application:
 
-* [FastAPI](https://fastapi.tiangolo.com/img/logo-margin/logo-teal.png)
+* [![FastAPI][https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi]](https://fastapi.tiangolo.com)
 
 
 <!-- GETTING STARTED -->
