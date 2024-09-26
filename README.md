@@ -72,7 +72,7 @@ Features:
 
 Frameworks used in the application:
 
-* [https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi](https://fastapi.tiangolo.com)
+* [![FastAPI][fastapi-url]](http://fastapi.tiangolo.com)
 
 
 <!-- GETTING STARTED -->
@@ -178,3 +178,4 @@ Project Link: [https://github.com/your_username/repo_name](https://github.com/yo
 [linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=flat-square&logo=linkedin&colorB=555
 [linkedin-url]: https://linkedin.com
 [product-screenshot]: images/screenshot.png
+[fastapi-url]: https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi
