@@ -3,7 +3,7 @@
 *.pyo
 *.pyd
 *.pyw
-*speedtest.txt
+speedtest.txt
 
 
 # Byte-compiled / optimized / DLL files
