@@ -4,16 +4,19 @@
 <head>
     <title>Backgound Speed Test</title>
     <link rel="icon" type="image/x-icon" href="{{ url_for('static', path='images/speedo.png') }}">
-    <link rel="stylesheet" type="text/css" href="{{ url_for('static', path='styles.css') }}">
-    <meta http-equiv="refresh" content="600">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', path='css/dashboard.css') }}">
+    <meta http-equiv="refresh" content="600" name="viewport" content="width=device-width, initial-scale=1.0">
     <script  src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script> 
 </head>
 
 <body>
-    <h1>Background-SpeedTest Dashboard</h1>
     <div class="container">
-        <div class="card">
-            <div class="status">Showing date range: <span id="status-text"> {{data[0]["dates"][0]}} to {{data[0]["dates"][-1]}}</span></div>
+        <img src="{{ url_for('static', path='images/speedo.png') }}" alt="Speedo" style="width: 100px; height: 100px;">
+        <div class="main-title">
+            <h1>Background-SpeedTest Dashboard</h1>
+            <div class="status">
+                Showing date range: <span id="status-text"> {{data[0]["dates"][0]}} to {{data[0]["dates"][-1]}}</span>
+            </div>
         </div>
     </div>
     
@@ -101,3 +104,6 @@
     }
 
 </script>
+
+
+</html>

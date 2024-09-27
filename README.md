@@ -70,8 +70,13 @@ Features:
 
 Frameworks used in the application:
 
-* [![FastAPI][fastapi-url]](http://fastapi.tiangolo.com)
-* [![ChartJS][chartjs-url]](https://www.chartjs.org)
+* [![Python][python-shield]](https://www.python.org/)
+* [![FastAPI][fastapi-shield]](http://fastapi.tiangolo.com/)
+* [![HTML][html-shield]](https://html.com/)
+* [![JavaScript][js-shield]](https://www.javascript.com/)
+* [![ChartJS][chartjs-shield]](https://www.chartjs.org/)
+* [![Jinja][jinja-shield]](https://jinja.palletsprojects.com/en/3.1.x/)
+
 
 
 <!-- GETTING STARTED -->
@@ -177,5 +182,10 @@ Project Link: [https://github.com/gilbo123/BackgroundSpeedTest](https://github.c
 [linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=flat-square&logo=linkedin&colorB=555
 [linkedin-url]: https://linkedin.com
 [product-screenshot]: web/static/images/graph.png
-[fastapi-url]: https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi
-[chartjs-url]: https://img.shields.io/badge/Chart.js-FF6384?style=for-the-badge&logo=chartdotjs&logoColor=white
+[fastapi-shield]: https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi
+[chartjs-shield]: https://img.shields.io/badge/Chart.js-FF6384?style=for-the-badge&logo=chartdotjs&logoColor=white
+[html-shield]: https://img.shields.io/badge/HTML-239120?style=for-the-badge&logo=html5&logoColor=white
+[css-shield]: https://img.shields.io/badge/CSS-239120?&style=for-the-badge&logo=css3&logoColor=white
+[js-shield]: https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black
+[python-shield]: https://img.shields.io/badge/Python-14354C?style=for-the-badge&logo=python&logoColor=white
+[jinja-shield]: https://img.shields.io/badge/Jinja-B41717?logo=jinja&logoColor=fff&style=for-the-badge

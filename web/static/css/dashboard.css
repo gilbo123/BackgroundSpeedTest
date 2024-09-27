@@ -1,0 +1,134 @@
+
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #fff;
+}
+
+header {
+    background-color: #333;
+    color: #fff;
+    padding: 10px 0;
+    text-align: center;
+}
+
+img {
+    height: auto;
+    float: left;
+    margin: 20px;
+}
+
+nav {
+    display: flex;
+    justify-content: center;
+    background-color: #333;
+}
+
+nav a {
+    color: #fff;
+    text-decoration: none;
+    padding: 10px 15px;
+}
+
+nav a:hover {
+    background-color: #555;
+}
+
+nav a.active {
+    background-color: #555;
+}
+
+.btn {
+    display: inline-block;
+    background-color: #333;
+    color: #fff;
+    padding: 10px 20px;
+    margin: 10px 0;
+    text-decoration: none;
+    border-radius: 5px;
+}
+
+.btn:hover {
+    background-color: #555;
+}
+
+.btn-danger {
+    background-color: #d9534f;
+}
+
+.btn-danger:hover {
+    background-color: #c9302c;
+}
+
+.btn-success {
+    background-color: #5cb85c;
+}
+
+.btn-success:hover {
+    background-color: #4cae4c;
+}
+
+.main-title {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: left;
+    text-align: center;
+    width: 80%;
+}
+
+.main-title h1 {
+    text-align: left;
+    margin: 20px;
+    width: 80%;
+}
+
+.container {
+    background-color: #fff;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-around;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    margin-top: 20px;
+    margin-left: 50px;
+    margin-right: 50px;
+}
+
+.card {
+    min-width: 10%;
+    margin: 10px;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+}
+
+.card h2 {
+    text-align: center;
+}
+
+.card .status {
+    text-align: center;
+}
+
+
+.status {
+    /* margin: 10px; */
+    float: right;
+    /* text-align: left; */
+    margin: 20px;
+    /* align-content: center; */
+}
+
+#status-text {
+    font-weight: bold;
+    margin: 10px;
+    /* float: left; */
+}
+
+#myChart {
+    width: 100%;
+    max-width: 1200px;
+    align-content: center;
+    
+    /* height: 75%; */
+}
