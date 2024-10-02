@@ -24,7 +24,7 @@
   <h3 align="center">Background Speed Test Server</h3>
 
   <p align="center">
-    An awesome README template to jumpstart your projects!
+    A simple server that runs in the background every 5 mins to test your internet speed and displays the results in a graph.
     <br />
     <a href="https://github.com/gilbo123/BackgroundSpeedTest"><strong>Explore the docs »</strong></a>
     <br />
