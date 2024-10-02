@@ -18,7 +18,7 @@
 <br />
 <p align="center">
   <a href="https://github.com/gilbo123/BackgroundSpeedTest">
-    <img src="web/static/images/speedo.png" alt="Logo" width="200" height="200">
+    <img src="web/static/images/logo.png" alt="Logo" width="500">
   </a>
 
   <h3 align="center">Background Speed Test Server</h3>
