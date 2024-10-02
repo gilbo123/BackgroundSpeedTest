@@ -93,6 +93,7 @@ def parse_text_file():
     dates: list[str] = []
     uploads: list[float] = []
     downloads: list[float] = []
+    pings: list[float] = []  # New list for ping data
     for chunk in chunks:
         # split the chunk into lines
         new_lines: list[str] = chunk.split("\n")
@@ -105,6 +106,7 @@ def parse_text_file():
         upload: str = ""
         download: str = ""
         date: str = ""
+        ping: str = ""  # New variable for ping
         for line in new_lines:
             if line == "":
                 continue
@@ -115,23 +117,24 @@ def parse_text_file():
                     download: str = line.split(":")[1].strip().split(" Mbps")[0].strip()
                 elif "Date" in line:
                     dt: str = line.split("Date: ")[1].strip()
-                    # convert the date to a datetime object
                     dt: datetime = datetime.strptime(dt, "%d-%m-%Y %H:%M:%S")
-                    # change the formatting
-                    date: str = dt.strftime("%d-%b-%y %H:%M:%S")
+                    date: str = dt.strftime("%d-%b-%y")
+                elif "Latency" in line:  # New condition to parse ping data
+                    ping: str = line.split(":")[1].strip().split(" ms")[0].strip()
 
-                # append the values to the data list
-                if upload != "" and download != "" and date != "":
+                # append the values to the data lists
+                if upload != "" and download != "" and date != "" and ping != "":
                     dates.append(date)
                     uploads.append(float(upload))
                     downloads.append(float(download))
+                    pings.append(float(ping))  # Add ping data to the list
 
             except Exception as e:
                 print(f"Error parsing line: {e}")
                 continue
 
     # return the data
-    return dates, uploads, downloads
+    return dates, uploads, downloads, pings  # Include pings in the return statement
 
 
 ###################################
@@ -181,12 +184,12 @@ async def read_root(request: Request):
     """Root page. Redndered in a Jinja Template."""
 
     # Get the data and send to TemplateRepsonse
-    dates, uploads, downloads = parse_text_file()
+    dates, uploads, downloads, pings = parse_text_file()
     return templates.TemplateResponse(
         "dashboard.html",
         {
             "request": request,
-            "data": [{"dates": dates, "uploads": uploads, "downloads": downloads}],
+            "data": [{"dates": dates, "uploads": uploads, "downloads": downloads, "pings": pings}],
         },
     )
 
