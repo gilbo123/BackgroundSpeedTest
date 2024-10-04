@@ -87,12 +87,28 @@ This application is inteded to run on a server such as a Raspberry Pi or other l
 ### Prerequisites
 
 This is an example of how to list things you need to use the software and how to install them.
-* npm
+
+* npm (Node Package Manager)
 ```sh
-npm install npm@latest -g
+pip3 install npm
 ```
+or for Raspberry Pi:
+```sh
+sudo apt-get install npm
+```
+* Chart.js (JavaScript library for displaying graphs)
 ```sh
 npm install chart.js
+```
+
+* Official Speedtest CLI - https://www.speedtest.net/apps/cli
+```sh
+sudo apt-get install speedtest
+```
+
+__Note: The speedtest CLI will need to be run at least once in the shell before using the server due to licensing agreement.__
+```sh
+speedtest
 ```
 
 ### Installation
