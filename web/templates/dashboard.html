@@ -67,16 +67,15 @@
                 responsive: true,
                 maintainAspectRatio: false,
                 scales: {
-                    y: {
+                    yAxes: [{
                         beginAtZero: true
-                    },
-                    x: {
+                    }],
+                    xAxes: [{
                         ticks: {
-                            maxTicksLimit: 10,
-                            maxRotation: 0,
-                            minRotation: 0
-                        }
-                    }
+                            autoSkip: true,
+                            maxTicksLimit: 30,
+                        },
+                    }],
                 },
                 plugins: {
                     title: {
@@ -108,22 +107,12 @@
                 responsive: true,
                 maintainAspectRatio: false,
                 scales: {
-                    y: {
-                        beginAtZero: true
-                    },
-                    x: {
+                    xAxes: [{
                         ticks: {
-                            maxTicksLimit: 6,
-                            maxRotation: 0,
-                            minRotation: 0
-                        },
-                        // reduce number of labels
-                        labels: {
-                            maxTicksLimit: 6,
-                            maxRotation: 0,
-                            minRotation: 0
+                            autoSkip: true,
+                            maxTicksLimit: 15,
                         }
-                    }
+                    }],
                 },
                 plugins: {
                     title: {

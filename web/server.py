@@ -53,6 +53,11 @@ def run_speed_test(interval: int) -> None:
             elif result == 2:
                 print("Keyboard interupt. Exiting...")
                 break
+            # check 512 no internet
+            elif result == 512:
+                print("NO INTERNET!")
+                # save zeros
+
             else:
                 print(f"Error running speedtest. Return code: {result}")
         except Exception as e:
@@ -98,9 +103,20 @@ def parse_text_file():
         # split the chunk into lines
         new_lines: list[str] = chunk.split("\n")
 
+        # if only date, add zeros
+        if len (new_lines) == 2:
+            dt: str = new_lines[0].split("Date: ")[1].strip()
+            dt: datetime = datetime.strptime(dt, "%d-%m-%Y %H:%M:%S")
+            date: str = dt.strftime("%d-%b-%y")
+            dates.append(date)
+            uploads.append(0.0)
+            downloads.append(0.0)
+            pings.append(0.0)  # Add ping data to the list
+
         # check if the chunk has the correct number of lines
         if len(new_lines) < 3:
             continue
+        
 
         # get the values
         upload: str = ""
@@ -128,6 +144,7 @@ def parse_text_file():
                     uploads.append(float(upload))
                     downloads.append(float(download))
                     pings.append(float(ping))  # Add ping data to the list
+                
 
             except Exception as e:
                 print(f"Error parsing line: {e}")
