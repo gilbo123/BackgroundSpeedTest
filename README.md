@@ -96,12 +96,15 @@ or for Raspberry Pi:
 ```sh
 sudo apt-get install npm
 ```
-* Chart.js (JavaScript library for displaying graphs)
+
+### Installation
+
+1. Chart.js (JavaScript library for displaying graphs)
 ```sh
 npm install chart.js
 ```
 
-* Official Speedtest CLI - https://www.speedtest.net/apps/cli
+2. Official Speedtest CLI - https://www.speedtest.net/apps/cli
 ```sh
 sudo apt-get install speedtest
 ```
@@ -111,47 +114,25 @@ __Note: The speedtest CLI will need to be run at least once in the shell before 
 speedtest
 ```
 
-### Installation
-
-1. Clone the repo
+3. Clone the repo
 ```sh
 git clone https://github.com/gilbo123/BackgroundSpeedTest.git
 ```
 ```sh
 cd BackGroundSpeedTest
 ```
-3. Install requirements
+4. Install requirements
 ```sh
 pip3 install -r requirements.txt
-```
-4. Run the application
-```sh
-sh run_server.sh
 ```
 
 <!-- USAGE EXAMPLES -->
 ## Usage
 
-```python
-# Define routes and functions
-@app.get("/", response_class=HTMLResponse)
-async def read_root(request: Request):
-    """Root page. Redndered in a Jinja Template."""
-
-    # Get the data and send to TemplateRepsonse
-    dates, uploads, downloads = parse_text_file()
-    return templates.TemplateResponse(
-        "dashboard.html",
-        {
-            "request": request,
-            "data": [{"dates": dates, "uploads": uploads, "downloads": downloads}],
-        },
-    )
+```sh
+sh run_server.sh
 ```
 
-```python
-uvicorn.run(app, host=THIS_IP, port=THIS_PORT)
-```
 
 
 _For more examples, please refer to the [Documentation](https://example.com)_
