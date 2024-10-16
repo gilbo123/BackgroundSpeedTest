@@ -1,5 +1,5 @@
 from argparse import ArgumentParser, Namespace
-from datetime import datetime
+from datetime import datetime, timedelta
 import os
 from threading import Thread
 from time import sleep, strptime
@@ -10,6 +10,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
 import uvicorn
+import yaml
 
 
 def run_speed_test(interval: int) -> None:
@@ -118,11 +119,12 @@ def parse_text_file():
             continue
         
 
-        # get the values
+        # reset the values
         upload: str = ""
         download: str = ""
         date: str = ""
         ping: str = ""  # New variable for ping
+        
         for line in new_lines:
             if line == "":
                 continue
@@ -138,13 +140,28 @@ def parse_text_file():
                 elif "Latency" in line:  # New condition to parse ping data
                     ping: str = line.split(":")[1].strip().split(" ms")[0].strip()
 
+                # if DATE is older than KEEP_RECORDS_FOR, remove it from the text file
+                if datetime.strptime(date, "%d-%b-%y") < (datetime.now() - timedelta(days=KEEP_RECORDS_FOR)):
+                    # remove the line from the text file
+                    print(f"Removing line from date: {date}")
+                    with open("web/static/speedtest.txt", "r") as file:
+                        lines: list[str] = file.readlines()
+                    with open("web/static/speedtest.txt", "w") as file:
+                        for line in lines:
+                            if line.split("Date: ")[1].strip() != date:
+                                file.write(line)
+                
+                # if DATE is older than DAYS, dont show it
+                elif datetime.strptime(date, "%d-%b-%y") < (datetime.now() - timedelta(days=DAYS)):
+                    continue
+                
                 # append the values to the data lists
                 if upload != "" and download != "" and date != "" and ping != "":
                     dates.append(date)
                     uploads.append(float(upload))
                     downloads.append(float(download))
                     pings.append(float(ping))  # Add ping data to the list
-                
+
 
             except Exception as e:
                 print(f"Error parsing line: {e}")
@@ -167,28 +184,15 @@ app.mount(
 )
 templates = Jinja2Templates(directory="web/templates")
 
+# read the .yaml file
+with open("config.yaml", "r") as file:
+    config: dict[str, Any] = yaml.safe_load(file)
 
-# command line args
-parser: ArgumentParser = ArgumentParser()
-parser.add_argument(
-    "--months-to-plot",
-    type=int,
-    default=3,
-    help="Number of months data to plot in the graph",
-)
-parser.add_argument(
-    "--test-interval-seconds",
-    type=int,
-    default=600,
-    help="Seconds between speed tests",
-)
-# Options
-opt: Namespace = parser.parse_args()
 
 # Constants
-INTERVAL: int = opt.test_interval_seconds
-MONTHS: int = opt.months_to_plot
-
+INTERVAL: int = config["test_interval"]
+DAYS: int = config["days"]
+KEEP_RECORDS_FOR: int = config["keep_records_for"]
 
 ###################################
 ##########ROUTES##########

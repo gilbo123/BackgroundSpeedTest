@@ -1,0 +1,12 @@
+# config  for the server
+
+# the number of days to show on the dashboard
+days: 30
+
+# number of days to keep records for
+keep_records_for: 180
+
+# the number of seconds between each speed test
+test_interval: 600
+
+
