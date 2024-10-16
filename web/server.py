@@ -100,22 +100,34 @@ def parse_text_file():
     uploads: list[float] = []
     downloads: list[float] = []
     pings: list[float] = []  # New list for ping data
+
+    chunks_to_keep: list[str] = []
+
     for chunk in chunks:
+        # flag to keep the chunk
+        keep_chunk: bool = False
+        
         # split the chunk into lines
         new_lines: list[str] = chunk.split("\n")
 
         # if only date, add zeros
         if len (new_lines) == 2:
+            # thi means the date was written
+            # but there was an error in the speedtest
+            # so we add zeros
             dt: str = new_lines[0].split("Date: ")[1].strip()
             dt: datetime = datetime.strptime(dt, "%d-%m-%Y %H:%M:%S")
             date: str = dt.strftime("%d-%b-%y")
-            dates.append(date)
-            uploads.append(0.0)
-            downloads.append(0.0)
-            pings.append(0.0)  # Add ping data to the list
+            if datetime.strptime(date, "%d-%b-%y") > (datetime.now() - timedelta(days=DAYS)):
+                dates.append(date)
+                uploads.append(0.0)
+                downloads.append(0.0)
+                pings.append(0.0)  # Add ping data to the list
+                chunks_to_keep.append(chunk)
+            continue
 
         # check if the chunk has the correct number of lines
-        if len(new_lines) < 3:
+        if len(new_lines) < 15:
             continue
         
 
@@ -141,31 +153,32 @@ def parse_text_file():
                     ping: str = line.split(":")[1].strip().split(" ms")[0].strip()
 
                 # if DATE is older than KEEP_RECORDS_FOR, remove it from the text file
-                if datetime.strptime(date, "%d-%b-%y") < (datetime.now() - timedelta(days=KEEP_RECORDS_FOR)):
-                    # remove the line from the text file
-                    print(f"Removing line from date: {date}")
-                    with open("web/static/speedtest.txt", "r") as file:
-                        lines: list[str] = file.readlines()
-                    with open("web/static/speedtest.txt", "w") as file:
-                        for line in lines:
-                            if line.split("Date: ")[1].strip() != date:
-                                file.write(line)
-                
-                # if DATE is older than DAYS, dont show it
-                elif datetime.strptime(date, "%d-%b-%y") < (datetime.now() - timedelta(days=DAYS)):
-                    continue
+                if datetime.strptime(date, "%d-%b-%y") > (datetime.now() - timedelta(days=KEEP_RECORDS_FOR)):
+                    keep_chunk = True
                 
                 # append the values to the data lists
                 if upload != "" and download != "" and date != "" and ping != "":
-                    dates.append(date)
-                    uploads.append(float(upload))
-                    downloads.append(float(download))
-                    pings.append(float(ping))  # Add ping data to the list
-
+                    
+                    # if DATE is older than DAYS, dont show it
+                    if datetime.strptime(date, "%d-%b-%y") > (datetime.now() - timedelta(days=DAYS)):
+                        dates.append(date)
+                        uploads.append(float(upload))
+                        downloads.append(float(download))
+                        pings.append(float(ping))  # Add ping data to the list
+                        break
 
             except Exception as e:
                 print(f"Error parsing line: {e}")
                 continue
+
+        # append the chunk to the chunks_to_keep
+        if keep_chunk:
+            chunks_to_keep.append(chunk)
+
+    # rewrite the file with the chunks_to_keep
+    with open("web/static/speedtest.txt", "w") as file:
+        for chunk in chunks_to_keep:
+            file.write(chunk + "\n~~~~~\n")
 
     # return the data
     return dates, uploads, downloads, pings  # Include pings in the return statement
