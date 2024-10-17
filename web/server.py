@@ -32,8 +32,8 @@ def run_speed_test(interval: int) -> None:
     """
 
     # check the file exists
-    if not os.path.exists("web/static/speedtest.txt"):
-        os.system("touch web/static/speedtest.txt")
+    if not os.path.exists(TXT_FILE):
+        os.system("touch " + TXT_FILE)
 
     sleep(1)
 
@@ -42,12 +42,12 @@ def run_speed_test(interval: int) -> None:
         print("Running speedtest. Please wait....")
         try:
             result: int = os.system(
-                "printf '\n~~~~~\nDate: ' >> web/static/speedtest.txt"
+                "printf '\n~~~~~\nDate: ' >> " + TXT_FILE
             )
             result: int = os.system(
-                "date '+%d-%m-%Y %H:%M:%S' >> web/static/speedtest.txt"
+                "date '+%d-%m-%Y %H:%M:%S' >> " + TXT_FILE
             )
-            result: int = os.system("speedtest >> web/static/speedtest.txt")
+            result: int = os.system("speedtest >> " + TXT_FILE)
             if result == 0:
                 # command ran successfully
                 pass
@@ -89,7 +89,7 @@ def parse_text_file():
     """
 
     # open the file
-    with open("web/static/speedtest.txt", "r") as file:
+    with open(TXT_FILE, "r") as file:
         text: str = file.read()
 
     # split the file into chunks
@@ -176,7 +176,7 @@ def parse_text_file():
             chunks_to_keep.append(chunk)
 
     # rewrite the file with the chunks_to_keep
-    with open("web/static/speedtest.txt", "w") as file:
+    with open(TXT_FILE, "w") as file:
         for chunk in chunks_to_keep:
             file.write(chunk + "\n~~~~~\n")
 
@@ -206,6 +206,7 @@ with open("config.yaml", "r") as file:
 INTERVAL: int = config["test_interval"]
 DAYS: int = config["days"]
 KEEP_RECORDS_FOR: int = config["keep_records_for"]
+TXT_FILE: str = "web/speedtest.txt"
 
 ###################################
 ##########ROUTES##########

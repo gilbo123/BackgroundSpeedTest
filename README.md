@@ -130,7 +130,7 @@ pip3 install -r requirements.txt
 ## Usage
 
 ```sh
-sh run_server.sh
+bash run_server.sh
 ```
 
 
