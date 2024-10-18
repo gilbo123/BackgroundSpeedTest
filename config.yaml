@@ -7,6 +7,6 @@ days: 30
 keep_records_for: 180
 
 # the number of seconds between each speed test
-test_interval: 600
+test_interval: 60*60 # 1 hour
 
 
