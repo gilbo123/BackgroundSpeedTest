@@ -15,7 +15,7 @@ import uvicorn
 import yaml
 
 
-def run_speed_test(interval: int) -> None:
+def run_speed_test(speedtest_interval: int) -> None:
     """Run the speedtest-cli and save the output to a file forever
 
     This function will run the speedtest-cli and save the output to a file
@@ -68,9 +68,9 @@ def run_speed_test(interval: int) -> None:
 
         # loop every 60 seconds
         print(
-            f"Speedtest complete at {datetime.now()}. Sleeping for {interval} seconds..."
+            f"Speedtest complete at {datetime.now()}. Sleeping for {speedtest_interval} seconds..."
         )
-        sleep(interval)
+        sleep(speedtest_interval)
 
     # Done
     print("Exiting speedtest thread...")
