@@ -15,7 +15,7 @@ if [[ "$VIRTUAL_ENV" != "" ]]; then
 	    #run the server
 	    echo "";
 	    echo "Running server in the background...";
-	    python $FILE;
+	    python3 $FILE;
     else 
 	echo "$FILE does not exist.";
 	    echo "Exiting...";
