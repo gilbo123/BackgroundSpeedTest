@@ -28,7 +28,7 @@ else
     if [ "$answer" != "${answer#[Yy]}" ]; then
 	    echo "";
 	    echo "Running server in the background...";
-	    python $FILE;
+	    python3 $FILE;
     else
 	    echo "Exiting...";
     fi
