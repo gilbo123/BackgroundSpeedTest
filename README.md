@@ -86,10 +86,11 @@ This application is inteded to run on a server such as a Raspberry Pi or other l
 
 ### Prerequisites
 
-This is an example of how to list things you need to use the software and how to install them.
-
+* Python3
 * npm (Node Package Manager)
-```sh
+
+
+#### npm (Node Package Manager)
 pip3 install npm
 ```
 or for Raspberry Pi:
