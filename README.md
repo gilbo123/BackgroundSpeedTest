@@ -106,6 +106,8 @@ npm install chart.js
 
 2. Official Speedtest CLI - https://www.speedtest.net/apps/cli
 ```sh
+sudo apt-get install curl
+curl -s https://packagecloud.io/install/repositories/ookla/speedtest-cli/script.deb.sh | sudo bash
 sudo apt-get install speedtest
 ```
 
@@ -133,6 +135,19 @@ pip3 install -r requirements.txt
 bash run_server.sh
 ```
 
+## View the dashboard
+
+Open a web browser and navigate to the following URL on the machine running the server:
+```sh
+http://localhost:5500
+```
+
+__Note: The default port is 5500. If you have changed the port in the config.yaml file, you will need to use the port number you set.__ 
+
+To access the dashboard from another device on the same network, use the following URL:__
+```sh
+http://<server_ip>:5500
+```
 
 
 _For more examples, please refer to the [Documentation](https://example.com)_

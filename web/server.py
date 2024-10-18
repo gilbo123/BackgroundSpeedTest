@@ -209,7 +209,7 @@ INTERVAL: int = config["test_interval"]
 DAYS: int = config["days"]
 KEEP_RECORDS_FOR: int = config["keep_records_for"]
 TXT_FILE: str = "web/speedtest.txt"
-
+PORT: int = config["port"]
 ###################################
 ##########ROUTES##########
 ###################################
@@ -231,9 +231,8 @@ async def read_root(request: Request):
     )
 
 
-# IP and Port
+# local IP - server
 THIS_IP = "0.0.0.0"
-THIS_PORT = 5500
 
 # set up the UDP THREAD
 st_thread: Thread = Thread(target=run_speed_test, args=(INTERVAL,), daemon=True)
@@ -241,8 +240,6 @@ st_thread.daemon = True
 st_thread.start()
 
 # Run the server
-uvicorn.run(app, host=THIS_IP, port=THIS_PORT)
-
-# print(parse_text_file())
+uvicorn.run(app, host=THIS_IP, port=PORT)
 
 print("Exiting application...")
