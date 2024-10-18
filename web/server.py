@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from argparse import ArgumentParser, Namespace
 from datetime import datetime, timedelta
 import os
