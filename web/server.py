@@ -15,7 +15,7 @@ import uvicorn
 import yaml
 
 
-def run_speed_test(speedtest_interval: int) -> None:
+def run_speed_test(speedtest_interval):
     """Run the speedtest-cli and save the output to a file forever
 
     This function will run the speedtest-cli and save the output to a file
