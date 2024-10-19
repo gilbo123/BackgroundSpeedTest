@@ -15,7 +15,7 @@ import uvicorn
 import yaml
 
 
-def run_speed_test(speedtest_interval):
+def run_speed_test(speedtest_interval: int) -> None:
     """Run the speedtest-cli and save the output to a file forever
 
     This function will run the speedtest-cli and save the output to a file
@@ -76,7 +76,7 @@ def run_speed_test(speedtest_interval):
     print("Exiting speedtest thread...")
 
 
-def parse_text_file():
+def parse_text_file() -> tuple[list[str], list[float], list[float], list[float]]:
     """
     Parse the text file (speedtest.txt) and find the all the
     Values for the Keys 'Date:', 'Upload', and 'Download'.
@@ -205,11 +205,11 @@ with open("config.yaml", "r") as file:
 
 
 # Constants
-INTERVAL: int = config["test_interval"]
-DAYS: int = config["days"]
-KEEP_RECORDS_FOR: int = config["keep_records_for"]
+INTERVAL: int = int(config["test_interval"])
+DAYS: int = int(config["days"])
+KEEP_RECORDS_FOR: int = int(config["keep_records_for"])
+PORT: int = int(config["port"])
 TXT_FILE: str = "web/speedtest.txt"
-PORT: int = config["port"]
 ###################################
 ##########ROUTES##########
 ###################################
