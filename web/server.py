@@ -10,180 +10,135 @@ from fastapi import FastAPI, Request, Response
 from fastapi.responses import HTMLResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-
+from pymongo import MongoClient
+from pymongo.collection import Collection
+from pymongo.database import Database
+import subprocess
+import json
 import uvicorn
 import yaml
 
+# MongoDB setup
+client = MongoClient('mongodb://localhost:27017/')
+db: Database = client['speedtest_db']
+speed_tests: Collection = db['speed_tests']
+
+# Create indexes for better query performance
+speed_tests.create_index('date')
 
 def run_speed_test(speedtest_interval: int) -> None:
-    """Run the speedtest-cli and save the output to a file forever
+    """Run the speedtest-cli and save the output to MongoDB
 
-    This function will run the speedtest-cli and save the output to a file
-    forever. The function will run every second. This is done to keep the
-    data up to date. The function will run forever. The function will not
-    return anything. The function will run the speedtest-cli and save the
-    output to a file. The function will then run the client.py script to
-    send the data to the server. The function will then sleep for 1 second
+    This function will run the speedtest-cli and save the output to MongoDB
+    forever. The function will run at specified intervals to keep the
+    data up to date.
 
     Args:
-        None
+        speedtest_interval: The interval in seconds between speed tests
 
     Returns:
         None
-
     """
-
-    # check the file exists
-    if not os.path.exists(TXT_FILE):
-        os.system("touch " + TXT_FILE)
-
     sleep(1)
 
-    # Run the speedtest-cli and save the output to a file
+    # Run the speedtest-cli and save the output to MongoDB
     while True:
         print("Running speedtest. Please wait....")
         try:
-            result: int = os.system(
-                "printf '\n~~~~~\nDate: ' >> " + TXT_FILE
+            # Get current timestamp
+            current_time = datetime.now()
+            
+            # Run speedtest and capture output
+            result = subprocess.run(
+                ['speedtest-cli', '--json', '--no-pre-allocate'], 
+                capture_output=True, 
+                text=True,
+                check=True
             )
-            result: int = os.system(
-                "date '+%d-%m-%Y %H:%M:%S' >> " + TXT_FILE
-            )
-            result: int = os.system("speedtest >> " + TXT_FILE)
-            if result == 0:
-                # command ran successfully
-                pass
-            elif result == 2:
-                print("Keyboard interupt. Exiting...")
+            
+            if result.returncode == 0:
+                # Parse JSON output
+                data = json.loads(result.stdout)
+                
+                # Store in MongoDB
+                speed_tests.insert_one({
+                    'date': current_time,
+                    'date_str': current_time.strftime("%d-%b-%y"),
+                    'download': float(data['download']) / 1_000_000,  # Convert to Mbps
+                    'upload': float(data['upload']) / 1_000_000,  # Convert to Mbps
+                    'ping': float(data['ping']),
+                })
+                print("Successfully saved speed test results to MongoDB")
+            
+            elif result.returncode == 2:
+                print("Keyboard interrupt. Exiting...")
                 break
-            # check 512 no internet
-            elif result == 512:
+            elif result.returncode == 512:
                 print("NO INTERNET!")
-                # save zeros
-
+                # Save zeros
+                speed_tests.insert_one({
+                    'date': current_time,
+                    'date_str': current_time.strftime("%d-%b-%y"),
+                    'download': 0.0,
+                    'upload': 0.0,
+                    'ping': 0.0
+                })
             else:
-                print(f"Error running speedtest. Return code: {result}")
+                print(f"Error running speedtest. Return code: {result.returncode}")
+                print(f"Error output: {result.stderr}")
+                # If we get an error, wait a bit longer before the next attempt
+                sleep(30)
+                continue
+                
         except Exception as e:
             print(f"Error running speedtest: {e}")
+            # If we get an error, wait a bit longer before the next attempt
+            sleep(30)
+            continue
 
-        # loop every 60 seconds
         print(
             f"Speedtest complete at {datetime.now()}. Sleeping for {speedtest_interval} seconds..."
         )
         sleep(speedtest_interval)
 
-    # Done
     print("Exiting speedtest thread...")
 
 
-def parse_text_file() -> tuple[list[str], list[float], list[float], list[float]]:
+def get_speed_test_data() -> tuple[list[str], list[float], list[float], list[float]]:
     """
-    Parse the text file (speedtest.txt) and find the all the
-    Values for the Keys 'Date:', 'Upload', and 'Download'.
-    Return the list of mappings with datetime and values.
-
-    Args:
-        None
+    Query MongoDB for speed test data within the specified time range.
+    Returns lists of dates, upload speeds, download speeds, and ping times.
 
     Returns:
-        list[dict[str, Any]]: List of mappings with datetime and values
-
+        tuple[list[str], list[float], list[float], list[float]]: Lists of dates and values
     """
-
-    # open the file
-    with open(TXT_FILE, "r") as file:
-        text: str = file.read()
-
-    # split the file into chunks
-    chunks: list[str] = text.split("\n~~~~~\n")
-
-    # loop through the chunks
+    # Calculate the cutoff date
+    cutoff_date = datetime.now() - timedelta(days=DAYS)
+    
+    # Query MongoDB for recent records
+    cursor = speed_tests.find(
+        {'date': {'$gt': cutoff_date}},
+        sort=[('date', 1)]  # Sort by date ascending
+    )
+    
+    # Initialize lists
     dates: list[str] = []
     uploads: list[float] = []
     downloads: list[float] = []
-    pings: list[float] = []  # New list for ping data
-
-    chunks_to_keep: list[str] = []
-
-    for chunk in chunks:
-        # flag to keep the chunk
-        keep_chunk: bool = False
-        
-        # split the chunk into lines
-        new_lines: list[str] = chunk.split("\n")
-
-        # if only date, add zeros
-        if len (new_lines) == 2:
-            # thi means the date was written
-            # but there was an error in the speedtest
-            # so we add zeros
-            dt: str = new_lines[0].split("Date: ")[1].strip()
-            dt: datetime = datetime.strptime(dt, "%d-%m-%Y %H:%M:%S")
-            date: str = dt.strftime("%d-%b-%y")
-            if datetime.strptime(date, "%d-%b-%y") > (datetime.now() - timedelta(days=DAYS)):
-                dates.append(date)
-                uploads.append(0.0)
-                downloads.append(0.0)
-                pings.append(0.0)  # Add ping data to the list
-                chunks_to_keep.append(chunk)
-            continue
-
-        # check if the chunk has the correct number of lines
-        if len(new_lines) < 15:
-            continue
-        
-
-        # reset the values
-        upload: str = ""
-        download: str = ""
-        date: str = ""
-        ping: str = ""  # New variable for ping
-        
-        for line in new_lines:
-            if line == "":
-                continue
-            try:
-                if "Upload" in line:
-                    upload: str = line.split(":")[1].strip().split(" Mbps")[0].strip()
-                elif "Download" in line:
-                    download: str = line.split(":")[1].strip().split(" Mbps")[0].strip()
-                elif "Date" in line:
-                    dt: str = line.split("Date: ")[1].strip()
-                    dt: datetime = datetime.strptime(dt, "%d-%m-%Y %H:%M:%S")
-                    date: str = dt.strftime("%d-%b-%y")
-                elif "Latency" in line:  # New condition to parse ping data
-                    ping: str = line.split(":")[1].strip().split(" ms")[0].strip()
-
-                # if DATE is older than KEEP_RECORDS_FOR, remove it from the text file
-                if datetime.strptime(date, "%d-%b-%y") > (datetime.now() - timedelta(days=KEEP_RECORDS_FOR)):
-                    keep_chunk = True
-                
-                # append the values to the data lists
-                if upload != "" and download != "" and date != "" and ping != "":
-                    
-                    # if DATE is older than DAYS, dont show it
-                    if datetime.strptime(date, "%d-%b-%y") > (datetime.now() - timedelta(days=DAYS)):
-                        dates.append(date)
-                        uploads.append(float(upload))
-                        downloads.append(float(download))
-                        pings.append(float(ping))  # Add ping data to the list
-                        break
-
-            except Exception as e:
-                print(f"Error parsing line: {e}")
-                continue
-
-        # append the chunk to the chunks_to_keep
-        if keep_chunk:
-            chunks_to_keep.append(chunk)
-
-    # rewrite the file with the chunks_to_keep
-    with open(TXT_FILE, "w") as file:
-        for chunk in chunks_to_keep:
-            file.write(chunk + "\n~~~~~\n")
-
-    # return the data
-    return dates, uploads, downloads, pings  # Include pings in the return statement
+    pings: list[float] = []
+    
+    # Process results
+    for doc in cursor:
+        dates.append(doc['date_str'])
+        uploads.append(doc['upload'])
+        downloads.append(doc['download'])
+        pings.append(doc['ping'])
+    
+    # Clean up old records
+    cleanup_date = datetime.now() - timedelta(days=KEEP_RECORDS_FOR)
+    speed_tests.delete_many({'date': {'$lt': cleanup_date}})
+    
+    return dates, uploads, downloads, pings
 
 
 ###################################
@@ -209,7 +164,7 @@ INTERVAL: int = int(config["test_interval"])
 DAYS: int = int(config["days"])
 KEEP_RECORDS_FOR: int = int(config["keep_records_for"])
 PORT: int = int(config["port"])
-TXT_FILE: str = "web/speedtest.txt"
+
 ###################################
 ##########ROUTES##########
 ###################################
@@ -218,10 +173,10 @@ TXT_FILE: str = "web/speedtest.txt"
 # Define routes and functions
 @app.get("/", response_class=HTMLResponse)
 async def read_root(request: Request):
-    """Root page. Redndered in a Jinja Template."""
+    """Root page. Rendered in a Jinja Template."""
 
-    # Get the data and send to TemplateRepsonse
-    dates, uploads, downloads, pings = parse_text_file()
+    # Get the data and send to TemplateResponse
+    dates, uploads, downloads, pings = get_speed_test_data()
     return templates.TemplateResponse(
         "dashboard.html",
         {

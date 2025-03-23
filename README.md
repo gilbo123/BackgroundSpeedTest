@@ -59,7 +59,7 @@
 
 [![Graph example][product-screenshot]](https://example.com)
 
-This project generates a continous timed event where Speedtest (CLI version) is used to gather download and upload information. The reults are saved to a simple text file before being plotted on a FastApi endpoint. The test file is used as the time period should not exceed a few months. The program will automatically delete old data from the same file.
+This project generates a continous timed event where Speedtest (CLI version) is used to gather download and upload information. The reults are saved to and retrieved from a mongodb database before being plotted on a FastApi endpoint. The program will automatically delete old data from the same file.
 
 Features:
 * Lightweight storage (text file) - no databases.
