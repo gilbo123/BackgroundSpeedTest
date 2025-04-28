@@ -1,7 +1,7 @@
 # config  for the server
 
 # the number of days to show on the dashboard
-days: 30
+days: 20
 
 # number of days to keep records for
 keep_records_for: 180

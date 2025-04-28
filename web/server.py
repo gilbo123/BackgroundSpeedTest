@@ -127,18 +127,27 @@ def get_speed_test_data() -> tuple[list[str], list[float], list[float], list[flo
     downloads: list[float] = []
     pings: list[float] = []
     
+    # smoothing window
+    window: int = 1
+
     # Process results
     for doc in cursor:
         dates.append(doc['date_str'])
         uploads.append(doc['upload'])
         downloads.append(doc['download'])
         pings.append(doc['ping'])
-    
+
+    # average the upload and download using window
+    # get the average of the window
+    avg_uploads = [sum(uploads[i:i+window]) / window for i in range(len(uploads))]
+    avg_downloads = [sum(downloads[i:i+window]) / window for i in range(len(downloads))]
+    avg_pings = [sum(pings[i:i+window]) / window for i in range(len(pings))]
+
     # Clean up old records
     cleanup_date = datetime.now() - timedelta(days=KEEP_RECORDS_FOR)
     speed_tests.delete_many({'date': {'$lt': cleanup_date}})
     
-    return dates, uploads, downloads, pings
+    return dates, avg_uploads, avg_downloads, avg_pings
 
 
 ###################################
