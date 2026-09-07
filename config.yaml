@@ -7,7 +7,8 @@ days: 20
 keep_records_for: 180
 
 # the number of seconds between each speed test
-test_interval: 300 # 1 hour
+# 300 = 5 minutes; 3600 = 1 hour
+test_interval: 300 # 5 minutes
 
 # the port to run the server on
 port: 5500

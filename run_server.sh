@@ -11,8 +11,8 @@ if ! command -v python3 &> /dev/null; then
     exit 1
 fi
 
-#check requirements file exists
-cd /home/trial/git/BackgroundSpeedTest/
+# run from the directory containing this script (repo root), wherever it lives
+cd "$(cd "$(dirname "$0")" && pwd)"
 FILE=web/server.py
 
 if [[ "$VIRTUAL_ENV" != "" ]]; then 

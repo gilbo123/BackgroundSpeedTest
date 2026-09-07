@@ -4,118 +4,70 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Background Speed Test</title>
+    <meta name="color-scheme" content="dark light">
+    <title>Background Speed Test — Dashboard</title>
     <link rel="icon" type="image/x-icon" href="{{ url_for('static', path='images/logo.png') }}">
-    <link rel="stylesheet" type="text/css" href="{{ url_for('static', path='css/dashboard.css?v=4') }}">
-    <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
-    <!-- reload page every 60 seconds -->
-    <meta http-equiv="refresh" content="60">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', path='css/dashboard.css?v=5') }}">
 </head>
 
-<body class="pastel-theme">
+<body>
     <header class="header">
-        <div class="container header-content">
-            <img src="{{ url_for('static', path='images/logo.png') }}" alt="Speedo" class="logo">
-            <div class="main-title">
-                <h1>Background-SpeedTest Dashboard</h1>
-                <div class="status">
-                    Showing date range: <span id="status-text">{{data[0]["dates"][0]}} to {{data[0]["dates"][-1]}}</span>
+        <div class="header-content">
+            <div class="brand">
+                <span class="brand-mark">&#9889;</span>
+                <div>
+                    <h1>Background Speed Test</h1>
+                    <p class="subtitle">Continuous network performance monitoring</p>
                 </div>
+            </div>
+            <div class="header-meta">
+                <span class="status-pill"><span class="status-dot" id="status-dot"></span><span id="status-text">Loading&hellip;</span></span>
             </div>
         </div>
     </header>
-    
+
     <main class="main-content">
-        <div class="charts-wrapper">
-            <div class="chart-container-big">
+        <section class="stats-grid" aria-label="Latest speed test results">
+            <div class="stat-card">
+                <div class="stat-label">Download</div>
+                <div class="stat-value"><span id="stat-download" data-dim>&ndash;</span><small>Mbps</small></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Upload</div>
+                <div class="stat-value"><span id="stat-upload" data-dim>&ndash;</span><small>Mbps</small></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Latency</div>
+                <div class="stat-value"><span id="stat-ping" data-dim>&ndash;</span><small>ms</small></div>
+            </div>
+            <div class="stat-card stat-card-muted">
+                <div class="stat-label">Last test</div>
+                <div class="stat-value stat-value-sm"><span id="stat-time" data-dim>&ndash;</span></div>
+            </div>
+        </section>
+
+        <section class="chart-card" aria-label="Speed test history">
+            <div class="chart-card-header">
+                <div>
+                    <h2>Network Performance</h2>
+                    <p class="chart-subtitle">Download, upload and latency over the past <span id="days-range">20</span> days</p>
+                </div>
+            </div>
+            <div class="chart-holder">
                 <canvas id="combinedChart"></canvas>
             </div>
-        </div>
+        </section>
     </main>
 
     <footer class="footer">
-        <div class="container">
-            <p>Powered by <a href="https://github.com/gilbo123/BackgroundSpeedTest">Background Speed Test</a></p>
+        <div class="footer-content">
+            <span>Powered by <a href="https://github.com/gilbo123/BackgroundSpeedTest">Background Speed Test</a></span>
+            <span class="footer-note">Tests run automatically in the background</span>
         </div>
     </footer>
-
-    <!-- JavaScript code to create the combined chart -->
-    <script>
-        var ctx = document.getElementById('combinedChart').getContext('2d');
-        var combinedChart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: {{ data[0]["dates"] | tojson }},
-                datasets: [{
-                    label: 'Download (Mbps)',
-                    data: {{ data[0]["downloads"] | tojson }},
-                    borderColor: 'rgba(75, 192, 192, 1)',
-                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                    tension: 0.1,
-                    yAxisID: 'y-axis-1'
-                }, {
-                    label: 'Upload (Mbps)',
-                    data: {{ data[0]["uploads"] | tojson }},
-                    borderColor: 'rgba(255, 99, 132, 1)',
-                    backgroundColor: 'rgba(255, 99, 132, 0.2)',
-                    tension: 0.1,
-                    yAxisID: 'y-axis-1'
-                }, {
-                    label: 'Ping (ms)',
-                    data: {{ data[0]["pings"] | tojson }},
-                    borderColor: 'rgba(153, 102, 255, 0.25)',
-                    backgroundColor: 'rgba(153, 102, 255, 0.1)',
-                    tension: 0.1,
-                    yAxisID: 'y-axis-2'
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    xAxes: [{
-                        ticks: {
-                            autoSkip: true,
-                            maxTicksLimit: 30,
-                        }
-                    }],
-                    yAxes: [{
-                        id: 'y-axis-1',
-                        type: 'linear',
-                        position: 'left',
-                        ticks: {
-                            beginAtZero: true
-                        },
-                        scaleLabel: {
-                            display: true,
-                            labelString: 'Speed (Mbps)'
-                        }
-                    }, {
-                        id: 'y-axis-2',
-                        type: 'linear',
-                        position: 'right',
-                        ticks: {
-                            beginAtZero: true
-                        },
-                        scaleLabel: {
-                            display: true,
-                            labelString: 'Ping (ms)'
-                        }
-                    }]
-                },
-                plugins: {
-                    title: {
-                        display: true,
-                        text: 'Network Performance'
-                    },
-                    legend: {
-                        position: 'top'
-                    }
-                }
-            }
-        });
-
-    </script>
 </body>
 </html>
+
+    <!-- Scripts after the body so the canvas exists when dashboard.js runs -->
+    <script src="{{ url_for('static', path='js/chart.umd.js') }}"></script>
+    <script src="{{ url_for('static', path='js/dashboard.js') }}"></script>

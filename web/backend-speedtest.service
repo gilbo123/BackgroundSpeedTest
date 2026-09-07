@@ -1,0 +1,30 @@
+# BackgroundSpeedTest - systemd service
+#
+# Install (on the remote server, as root):
+#   sudo cp web/backend-speedtest.service /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now backend-speedtest
+#
+# Adjust User, WorkingDirectory, and ExecStart to match your setup.
+# If you use a virtualenv (recommended), point ExecStart at its python:
+#   ExecStart=/opt/backgroundspeedtest/.venv/bin/python web/server.py
+
+[Unit]
+Description=Background Speed Test dashboard and test runner
+After=network-online.target mongod.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=trial
+WorkingDirectory=/home/trial/git/BackgroundSpeedTest
+ExecStart=/usr/bin/python3 web/server.py
+Restart=always
+RestartSec=5
+# Hardening (drop lines you can't use, e.g. on minimal systems)
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+
+[Install]
+WantedBy=multi-user.target
