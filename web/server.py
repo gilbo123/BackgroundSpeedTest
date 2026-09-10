@@ -6,7 +6,7 @@ import sys
 import time
 from time import sleep
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
@@ -141,26 +141,26 @@ def run_speed_test(speedtest_interval: int) -> None:
     print("Exiting speedtest thread...")
 
 
-def get_speed_test_data() -> tuple[list[str], list[float], list[float], list[float], datetime | None]:
+def get_speed_test_data(days: int) -> tuple[list[datetime], list[float], list[float], list[float], datetime | None]:
     """
-    Query MongoDB for speed test data within the specified time range.
-    Returns lists of dates, upload speeds, download speeds, ping times,
-    and the datetime of the most recent test (or None if no data).
+    Query MongoDB for speed test data within the last `days` days.
+    Returns lists of datetimes, upload speeds, download speeds, ping
+    times, and the datetime of the most recent test (or None if no data).
 
     Returns:
-        tuple with date labels, value lists, and last test time
+        tuple with datetimes, value lists, and last test time
     """
     # Calculate the cutoff date
-    cutoff_date = datetime.now() - timedelta(days=DAYS)
-    
+    cutoff_date = datetime.now() - timedelta(days=days)
+
     # Query MongoDB for recent records
     cursor = speed_tests.find(
         {'date': {'$gt': cutoff_date}},
         sort=[('date', 1)]  # Sort by date ascending
     )
-    
+
     # Initialize lists
-    dates: list[str] = []
+    times: list[datetime] = []
     uploads: list[float] = []
     downloads: list[float] = []
     pings: list[float] = []
@@ -168,13 +168,13 @@ def get_speed_test_data() -> tuple[list[str], list[float], list[float], list[flo
 
     # Process results (documents arrive sorted ascending, so the last one wins)
     for doc in cursor:
-        dates.append(doc['date_str'])
+        times.append(doc['date'])
         uploads.append(doc['upload'])
         downloads.append(doc['download'])
         pings.append(doc['ping'])
         last_time = doc['date']
 
-    return dates, uploads, downloads, pings, last_time
+    return times, uploads, downloads, pings, last_time
 
 
 ###################################
@@ -227,15 +227,64 @@ async def read_root(request: Request):
     )
 
 
+# Window size for each dashboard view, in days (Year capped at keep_records_for)
+VIEW_DAYS = {"day": 1, "week": 7, "month": 30, "year": 366}
+
+# X-axis tick label format per view:
+#   day    → "3 Sep, 14:25"  (time + day, no month/year)
+#   week   → "Wed 3"        (weekday + day, no year)
+#   month  → "3 Sep"        (day + month)
+#   year   → "Sep 25"       (month + short year)
+VIEW_LABEL_FMT = {
+    "day": "%d %b, %H:%M",   # e.g. "10 Sep, 14:25"
+    "week": "%a %d",         # e.g. "Wed 10"
+    "month": "%d %b",        # e.g. "10 Sep"
+    "year": "%b %y",         # e.g. "Sep 25"
+}
+
+
 @app.get("/api/data")
-def api_data() -> dict[str, Any]:
-    """JSON speed test data for the last DAYS days, sorted ascending by date.
+def api_data(days: Optional[int] = None, view: Optional[str] = None) -> dict[str, Any]:
+    """JSON speed test data for the requested window, sorted ascending by date.
+
+    Accepts either an explicit `days` window or a dashboard `view` name
+    (day/week/month/year) that maps to a window and an x-axis label format.
+    The `days` parameter takes precedence when both are given.
 
     Includes a last_test field (latest sample + timestamp) used by the
     dashboard's stat cards.
     """
-    dates, uploads, downloads, pings, last_time = get_speed_test_data()
-    if dates:
+    # Resolve the requested window; fall back to the config default
+    if view and view in VIEW_DAYS:
+        requested_days = VIEW_DAYS[view]
+    elif days is not None:
+        requested_days = days
+    else:
+        requested_days = DAYS
+
+    # Never ask for more records than we keep (Mongo is pruned beyond this)
+    requested_days = min(requested_days, KEEP_RECORDS_FOR)
+
+    # Label format: use the view's format when given, otherwise pick a
+    # sensible one based on the window size.
+    if view in VIEW_LABEL_FMT:
+        label_fmt = VIEW_LABEL_FMT[view]
+    elif requested_days <= 2:
+        label_fmt = "%d %b, %H:%M"
+    elif requested_days <= 10:
+        label_fmt = "%a %d"
+    elif requested_days <= 45:
+        label_fmt = "%d %b"
+    else:
+        label_fmt = "%b %y"
+
+    times, uploads, downloads, pings, last_time = get_speed_test_data(requested_days)
+
+    # Build human-friendly x labels from each record's timestamp
+    dates = [t.strftime(label_fmt) for t in times]
+    ts_list = [int(t.timestamp()) for t in times]
+
+    if times:
         last_test = {
             "date": dates[-1],
             "download": downloads[-1],
@@ -248,13 +297,15 @@ def api_data() -> dict[str, Any]:
         last_test = None
     return {
         "dates": dates,
+        "ts": ts_list,
         "uploads": uploads,
         "downloads": downloads,
         "downloads_units": "Mbps",
         "uploads_units": "Mbps",
         "pings": pings,
         "pings_units": "ms",
-        "days": DAYS,
+        "days": requested_days,
+        "view": view if view in VIEW_DAYS else None,
         "last_test": last_test,
     }
 

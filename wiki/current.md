@@ -4,7 +4,15 @@ _Status: idle_
 
 _Live checklist — update this file before code changes and after each step._
 
-Goal: Rotate x-axis tick labels 45° and kill the local server when done.
+_Last completed: views + favicon + README (2026-09-10)._
+
+- [x] `server.py`: `get_speed_test_data(days)` + `/api/data?view=` (capped at keep_records_for); per-view x labels (day="10 Sep, 14:25", week="Thu 10", month="10 Sep", year="Sep 26"); added `ts` + `view` fields
+- [x] `dashboard.html`: Day/Week/Month/Year toggle in chart header; dynamic subtitle; inline SVG ⚡ favicon
+- [x] `dashboard.js`: applies views, fetches `/api/data?view=`, persists in localStorage, updates subtitle/pill/stats
+- [x] `dashboard.css`: view-toggle styling + hover/focus + responsive states
+- [x] Verify all 4 views in browser (labels, formats, data)
+- [x] Rewrite README (typos, Mongo, config, views, systemd)
+- [x] Update wiki; log history; status idle
 
 - [x] Set maxRotation=45 and rotation=45 on x-axis ticks in dashboard.js
 - [x] Reload browser to confirm

@@ -8,6 +8,19 @@
     var REFRESH_INTERVAL_MS = 60 * 1000;
     var STALE_AFTER_MS = 15 * 60 * 1000; // dim metric values if the last test is older than this
 
+    var VIEWS = ['day', 'week', 'month', 'year'];
+    var VIEW_KEY = 'bgt_view';
+    var currentView = (function () {
+        try { return localStorage.getItem(VIEW_KEY) || 'month'; } catch (e) { return 'month'; }
+    })();
+
+    function subtitleFor(days) {
+        if (days <= 1)      { return 'Download, upload and latency over the past 24 hours'; }
+        if (days <= 7)      { return 'Download, upload and latency over the past week'; }
+        if (days <= 31)     { return 'Download, upload and latency over the past 30 days'; }
+        return 'Download, upload and latency over the past year';
+    }
+
     var COLORS = {
         download: 'rgba(56, 189, 248, 1)',
         downloadFill: 'rgba(56, 189, 248, 0.10)',
@@ -209,7 +222,7 @@
 
     async function refreshData() {
         try {
-            var res = await fetch('/api/data', { cache: 'no-store' });
+            var res = await fetch('/api/data?view=' + encodeURIComponent(currentView), { cache: 'no-store' });
             if (!res.ok) { throw new Error('HTTP ' + res.status); }
             var data = await res.json();
 
@@ -224,9 +237,8 @@
 
                 fillStatCards(data.last_test);
 
-                if (data.days) {
-                    setText('days-range', String(data.days));
-                }
+                var days = (typeof data.days === 'number') ? data.days : 0;
+                setText('days-range', subtitleFor(days));
                 setStatusPill('live', data.dates[0] + ' – ' + data.dates[data.dates.length - 1]);
             } else {
                 fillStatCards(null);
@@ -237,6 +249,33 @@
             setStatusPill('error', 'Connection error — will retry');
         }
     }
+
+    /* ---------- View toggle (Day / Week / Month / Year) ---------- */
+
+    var toggleButtons = Array.prototype.slice.call(document.querySelectorAll('.view-toggle button'));
+
+    function setActiveButton(view) {
+        toggleButtons.forEach(function (btn) {
+            btn.setAttribute('aria-pressed', String(btn.getAttribute('data-view') === view));
+        });
+    }
+
+    toggleButtons.forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            var view = btn.getAttribute('data-view');
+            if (!view || view === currentView) { return; }
+            currentView = view;
+            try { localStorage.setItem(VIEW_KEY, view); } catch (e) { /* ignore */ }
+            setActiveButton(view);
+            // Optimistic subtitle until the fetch resolves
+            setText('days-range', subtitleFor({ day: 1, week: 7, month: 30, year: 366 }[view]));
+            refreshData();
+        });
+    });
+
+    // Reflect a previously chosen view (from localStorage) before first load
+    setActiveButton(currentView);
+    setText('days-range', subtitleFor({ day: 1, week: 7, month: 30, year: 366 }[currentView]));
 
     refreshData();
     setInterval(refreshData, REFRESH_INTERVAL_MS);
