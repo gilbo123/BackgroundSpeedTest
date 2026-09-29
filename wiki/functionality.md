@@ -12,7 +12,8 @@ Modern dark theme. Structure (top → bottom):
 - **Header** (`.header` / `.header-content`): brand mark (⚡, `#fbbf24`) + title/subtitle on the left; a **status pill** (`.status-pill`, `#status-dot`) on the right showing the current window range and a live/error indicator.
 - **Favicon**: inline SVG data-URI in `dashboard.html` (⚡ on dark rounded square) matching the header brand — no separate file.
 - **Stat cards** (`.stats-grid` → `.stat-card`): Latest **Download**, **Upload**, **Latency (ping)**, and **Last test** time. Populated by `web/static/js/dashboard.js` from the `last_test` object in `/api/data`. Values auto-dim (`.is-stale`) when the newest sample is older than 15 min.
-- **Chart card** (`.chart-card` → `.chart-holder` → `#combinedChart`): single Chart.js v4 line chart, 3 datasets (download/upload on `y-speed` left axis, ping on `y-ping` right axis).
+- **Chart card** (`.chart-card` → `.chart-holder` → `#combinedChart`): single Chart.js v4 line chart, 4 datasets (download/upload on `y-speed` left axis, ping on `y-ping` right axis). **Download trend**: a faint dashed line = moving average of downloads (window `max(3, min(25, ~2% of samples))`), computed in `web/static/js/dashboard.js`, de-emphasized in the legend and hidden from tooltips.
+- **Ping sanitization** (server, `web/server.py`): `PING_MS_MAX` (5000 ms) is a sanity cap on speedtest ping samples. Values above the cap (a speedtest-host measurement glitch, e.g. 1,800,000 ms) are stored as `null` (renders as a chart gap) for new tests, and legacy Mongo rows are nulled at read time in `get_speed_test_data`. The `last_test` stat card shows the most recent *valid* ping (`null` renders as “—” in `dashboard.js`).
   - **View toggle** (`.view-toggle` in the chart-card header): `Day / Week / Month / Year` pill buttons; choice persists in `localStorage[bgt_view]` (default = Month).
   - Dynamic subtitle (`#days-range`) shows "over the past 24 hours / week / 30 days / year" depending on the active view.
 - **Footer** (`.footer` / `.footer-content`).
@@ -34,7 +35,7 @@ Key files:
 
 Server API (see `web/server.py`):
 - `GET /` — renders `dashboard.html`.
-- `GET /api/data` — JSON: `dates` (view-formatted labels), `ts` (unix seconds), `uploads`, `downloads`, `pings`, units, `days` (window used), `view` (echo of `?view` if valid, else `null`), and `last_test` `{date,download,upload,ping,time,ts}`. Accepts `?view=day|week|month|year` or `?days=N`; window is always capped to `keep_records_for`.
+- `GET /api/data` — JSON: `dates` (view-formatted labels), `ts` (unix seconds), `uploads`, `downloads`, `pings` (may contain `null` where a sample was a glitch), units, `days` (window used), `view` (echo of `?view` if valid, else `null`), and `last_test` `{date,download,upload,ping,time,ts}` (`last_test.ping` = most recent valid ping). Accepts `?view=day|week|month|year` or `?days=N`; window is always capped to `keep_records_for`.
 - `GET /health` — liveness: Mongo ping, test thread alive, uptime.
 - Background thread runs `speedtest` (`python -m speedtest`) every `test_interval` and writes to Mongo; also performs record cleanup (no longer done inside GETs).
 

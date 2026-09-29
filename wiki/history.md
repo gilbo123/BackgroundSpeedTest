@@ -2,6 +2,15 @@
 
 Completed work only — newest first. Active checklist lives in `wiki/current.md`.
 
+### 2026-09-29 — Ping outlier sanitizer + download trend line
+- **Ping glitch fix** (`web/server.py`): `speedtest-cli` sometimes reports multi-minute “pings” (up to 1.8M ms) from stalled requests to the speedtest host while down/up stay normal. New `PING_MS_MAX = 5000 ms` cap:
+  - **At capture**: ping > cap (or ≤ 0) is stored as `null` (log line notes the discard), so it renders as a chart gap — down/up are stored normally.
+  - **At API** (`get_speed_test_data`): legacy Mongo rows above the cap are also nulled, so existing bad data is fixed without a migration. `api_data` picks the most recent *valid* ping for the `last_test` stat card.
+  - Type annotations widened to `list[float | None]` for pings (Pylance clean).
+- **Trend line** (`web/static/js/dashboard.js`): new faint, dashed, 1.5px “Download trend (Mbps)” dataset = moving average of downloads, window `max(3, min(25, ~2% of samples))`; de-emphasized in the legend (muted text, line marker) and hidden from the tooltip.
+- **Stat card** (`dashboard.js`): ping `null` → value shows “—” instead of 0.
+- **Verified**: JS `node --check`; `server.py` imports clean in `spinenv` (virtualenvwrapper); seeded a fake 1,800,000 ms record → API returned it as `null`, no >5000 ms value leaked, `last_test` skipped to last valid sample; Month view screenshot shows the dashed trend over the noisy download line and a sane ping axis (~100 ms peak). Test server killed (`PORT_FREE`).
+
 ### 2026-09-10 — Day/Week/Month/Year views, ⚡ favicon, README rewrite
 - **Views** (`web/server.py`): `/api/data` now accepts `?view=day|week|month|year` (or an explicit `?days=N`); window is capped at `keep_records_for` so Mongo doesn't serve pruned data.
   - Per-view x-label formats: Day → `10 Sep, 14:25`; Week → `Thu 10`; Month → `10 Sep`; Year → `Sep 26`.
