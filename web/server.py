@@ -19,6 +19,17 @@ import json
 import uvicorn
 import yaml
 
+# Sanity cap for a single speedtest 'ping' sample.
+#
+# speedtest-cli measures latency by timing HTTP round-trips to a
+# (sometimes overseas) test server. A stalled DNS lookup or a slow
+# response from the test host can produce values in the *minutes*
+# (e.g. 1,800,000 ms) even while the actual connection is perfectly
+# healthy (down/up still normal). Anything above this is a measurement
+# glitch, not your latency — treat it as a missing sample (None) rather
+# than a real data point.
+PING_MS_MAX: float = 5_000.0
+
 # MongoDB setup
 client = MongoClient('mongodb://localhost:27017/')
 db: Database = client['speedtest_db']
@@ -82,7 +93,16 @@ def run_speed_test(speedtest_interval: int) -> None:
             if result.returncode == 0:
                 # Parse JSON output
                 data = json.loads(result.stdout)
-                
+
+                # Sanitize ping: an outlier (e.g. a stalled request to the
+                # speedtest host) is stored as null so it renders as a gap
+                # in the chart instead of stretching the axis to millions
+                # of ms. Down/up are unaffected and still stored normally.
+                ping_value = float(data['ping'])
+                if ping_value > PING_MS_MAX or ping_value <= 0:
+                    print(f"Ping outlier of {ping_value:.0f} ms discarded (cap {PING_MS_MAX:.0f} ms)")
+                    ping_value = None
+
                 # Store in MongoDB
                 speed_tests.insert_one({
                     'date': current_time,
@@ -90,7 +110,7 @@ def run_speed_test(speedtest_interval: int) -> None:
                     'date_label': current_time.strftime("%d %b, %H:%M"),
                     'download': float(data['download']) / 1_000_000,  # Convert to Mbps
                     'upload': float(data['upload']) / 1_000_000,  # Convert to Mbps
-                    'ping': float(data['ping']),
+                    'ping': ping_value,
                 })
                 print("Successfully saved speed test results to MongoDB")
             
@@ -106,7 +126,7 @@ def run_speed_test(speedtest_interval: int) -> None:
                     'date_str': current_time.strftime("%d-%b-%y"),
                     'download': 0.0,
                     'upload': 0.0,
-                    'ping': 0.0
+                    'ping': None
                 })
             else:
                 print(f"Error running speedtest. Return code: {result.returncode}")
@@ -141,11 +161,12 @@ def run_speed_test(speedtest_interval: int) -> None:
     print("Exiting speedtest thread...")
 
 
-def get_speed_test_data(days: int) -> tuple[list[datetime], list[float], list[float], list[float], datetime | None]:
+def get_speed_test_data(days: int) -> tuple[list[datetime], list[float], list[float], list[float | None], datetime | None]:
     """
     Query MongoDB for speed test data within the last `days` days.
     Returns lists of datetimes, upload speeds, download speeds, ping
-    times, and the datetime of the most recent test (or None if no data).
+    times (None where the sample was a glitch or missing), and the
+    datetime of the most recent test (or None if no data).
 
     Returns:
         tuple with datetimes, value lists, and last test time
@@ -163,15 +184,20 @@ def get_speed_test_data(days: int) -> tuple[list[datetime], list[float], list[fl
     times: list[datetime] = []
     uploads: list[float] = []
     downloads: list[float] = []
-    pings: list[float] = []
+    pings: list[float | None] = []
     last_time: datetime | None = None
 
     # Process results (documents arrive sorted ascending, so the last one wins)
+    # Legacy records from before the ping sanitizer may still contain huge
+    # values; filter them here so old rows render as gaps instead of spikes.
     for doc in cursor:
         times.append(doc['date'])
         uploads.append(doc['upload'])
         downloads.append(doc['download'])
-        pings.append(doc['ping'])
+        doc_ping = doc.get('ping')
+        if doc_ping is not None and (doc_ping > PING_MS_MAX or doc_ping <= 0):
+            doc_ping = None
+        pings.append(doc_ping)
         last_time = doc['date']
 
     return times, uploads, downloads, pings, last_time
@@ -284,12 +310,16 @@ def api_data(days: Optional[int] = None, view: Optional[str] = None) -> dict[str
     dates = [t.strftime(label_fmt) for t in times]
     ts_list = [int(t.timestamp()) for t in times]
 
+    # The stat card shows the most recent *valid* sample (get_speed_test_data
+    # already nulls out ping glitches for both new and legacy records).
+    last_ping = next((p for p in reversed(pings) if p is not None), None)
+
     if times:
         last_test = {
             "date": dates[-1],
             "download": downloads[-1],
             "upload": uploads[-1],
-            "ping": pings[-1],
+            "ping": last_ping,
             "time": last_time.strftime("%d %b %Y, %H:%M") if last_time else None,
             "ts": int(last_time.timestamp()) if last_time else None,  # unix seconds, for staleness checks
         }

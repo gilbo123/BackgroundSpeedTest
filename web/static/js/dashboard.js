@@ -24,6 +24,7 @@
     var COLORS = {
         download: 'rgba(56, 189, 248, 1)',
         downloadFill: 'rgba(56, 189, 248, 0.10)',
+        downloadTrend: 'rgba(56, 189, 248, 0.35)',
         upload: 'rgba(52, 211, 153, 1)',
         uploadFill: 'rgba(52, 211, 153, 0.08)',
         ping: 'rgba(251, 191, 36, 0.85)',
@@ -73,7 +74,7 @@
         }
         setText('stat-download', fmtMBps(lastTest.download));
         setText('stat-upload', fmtMBps(lastTest.upload));
-        setText('stat-ping', fmtPing(lastTest.ping));
+        setText('stat-ping', lastTest.ping != null ? fmtPing(lastTest.ping) : '—');
         setText('stat-time', lastTest.time || lastTest.date);
         // Dim the values if the newest sample is well over 15 minutes old
         if (typeof lastTest.ts === 'number') {
@@ -94,7 +95,7 @@
     /* ---------- Chart (Chart.js v4) ---------- */
 
     function makeDataset(label, axis, color, fill) {
-        return {
+        var ds = {
             label: label,
             data: [],
             borderColor: color,
@@ -109,6 +110,33 @@
             yAxisID: axis,
             fill: fill !== null
         };
+        return ds;
+    }
+
+    // Faint moving-average trend line over the download speeds, so the
+    // overall trend is easy to read against the noisy raw samples.
+    function movingAverage(values, window) {
+        var out = [];
+        for (var i = 0; i < values.length; i++) {
+            var start = Math.max(0, i - window + 1);
+            var sum = 0;
+            var count = 0;
+            for (var j = start; j <= i; j++) {
+                if (values[j] != null) { sum += values[j]; count++; }
+            }
+            out.push(count ? sum / count : null);
+        }
+        return out;
+    }
+
+    function trendDataSet() {
+        var ds = makeDataset('Download trend (Mbps)', 'y-speed', COLORS.downloadTrend, null);
+        ds.borderWidth = 1.5;
+        ds.borderDash = [5, 5];
+        ds.tension = 0.4;
+        ds.pointRadius = 0;
+        ds.pointHoverRadius = 0;
+        return ds;
     }
 
     var ctx = document.getElementById('combinedChart').getContext('2d');
@@ -119,6 +147,7 @@
             labels: [],
             datasets: [
                 makeDataset('Download (Mbps)', 'y-speed', COLORS.download, COLORS.downloadFill),
+                trendDataSet(),
                 makeDataset('Upload (Mbps)', 'y-speed', COLORS.upload, COLORS.uploadFill),
                 makeDataset('Ping (ms)', 'y-ping', COLORS.ping, null)
             ]
@@ -141,7 +170,19 @@
                         boxWidth: 7,
                         boxHeight: 7,
                         padding: 18,
-                        font: { size: 12, weight: '500' }
+                        font: { size: 12, weight: '500' },
+                        generateLabels: function (chart) {
+                            var items = Chart.defaults.plugins.legend.labels.generateLabels(chart);
+                            // De-emphasize the trend line in the legend
+                            for (var i = 0; i < items.length; i++) {
+                                if (chart.data.datasets[items[i].datasetIndex] &&
+                                    String(chart.data.datasets[items[i].datasetIndex].label).indexOf('trend') >= 0) {
+                                    items[i].textColor = 'rgba(147, 161, 184, 0.6)';
+                                    items[i].pointStyle = 'line';
+                                }
+                            }
+                            return items;
+                        }
                     }
                 },
                 tooltip: {
@@ -156,6 +197,7 @@
                     titleFont: { size: 12, weight: '600' },
                     callbacks: {
                         label: function (item) {
+                            if (item.dataset.label.indexOf('trend') >= 0) { return null; }
                             var v = item.parsed.y;
                             var text = item.dataset.label.indexOf('Ping') >= 0 ? fmtPing(v) : fmtMBps(v);
                             var name = item.dataset.label.replace(' (Mbps)', '').replace(' (ms)', '');
@@ -231,8 +273,12 @@
             if (hasData) {
                 combinedChart.data.labels = data.dates;
                 combinedChart.data.datasets[0].data = data.downloads;
-                combinedChart.data.datasets[1].data = data.uploads;
-                combinedChart.data.datasets[2].data = data.pings;
+                // Faint trend line: rolling average of the downloads, with a
+                // window that scales with the number of samples (3–25).
+                var trendWindow = Math.max(3, Math.min(25, Math.round(data.downloads.length * 0.02)));
+                combinedChart.data.datasets[1].data = movingAverage(data.downloads, trendWindow);
+                combinedChart.data.datasets[2].data = data.uploads;
+                combinedChart.data.datasets[3].data = data.pings;
                 combinedChart.update('none'); // no animation flicker on refresh
 
                 fillStatCards(data.last_test);
