@@ -1,10 +1,21 @@
 # Current work
 
-_Status: idle_
+_Status: in-progress_
 
-**Completed (2026-09-29):** Ping outlier sanitizer (`PING_MS_MAX` cap, glitch → null → chart gap; fixed at capture and at API for legacy rows) + faint dashed download-trend (moving average) dataset. See `wiki/history.md`.
+**Goal (2026-10-03):** (1) Make the download trend line **linear (straight segments, not Bezier curves)** and a **fraction wider** (1.5 → 2.5 px). (2) Add a **brush-zoom** tool: press-and-drag in the plot area selects an x-range and zooms in with 1-hour-resolution labels; no button pressed = normal tooltip; clicking a Day/Week/Month/Year button **unzooms** back to the full window (works even on the already-active view).
 
 _Live checklist — update this file before code changes and after each step._
+
+- [x] `dashboard.js`: trend dataset `tension: 0`, `borderWidth` 1.5 → 2.5
+- [x] `dashboard.js`: brush zoom — mousedown/move/up handlers + `afterDatasetsDraw` selection rect; `hiResLabels` from `ts`; `setZoom`/`clearZoom` (x-scale min/max)
+- [x] `dashboard.js`: view buttons always unzoom; `refreshData` keeps hi-res labels while zoomed
+- [x] `dashboard.html` + `dashboard.css`: small "drag to zoom" hint under the chart title
+- [ ] `node --check` + browser verify (trend straight/wider, drag-zoom in, unzoom via buttons)
+- [ ] Update `functionality.md`, prepend `history.md`, reset status to idle
+
+---
+
+**Completed (2026-09-29):** Ping outlier sanitizer (`PING_MS_MAX` cap, glitch → null → chart gap; fixed at capture and at API for legacy rows) + faint dashed download-trend (moving average) dataset. See `wiki/history.md`.
 
 - [x] Investigate how ping is captured/stored (`web/server.py` runner + storage) and why 1.8M ms values persist — raw `data['ping']` saved verbatim; no validation anywhere
 - [x] Decide handling: **clamp at capture** (ping > 5000 ms stored as `null` → chart gap) + **filter at API** (`PING_MS_MAX` applied in `api_data` so existing bad Mongo records are fixed too, no migration)

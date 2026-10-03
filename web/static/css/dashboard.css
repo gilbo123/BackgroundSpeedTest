@@ -235,6 +235,15 @@ body {
     color: var(--text-faint);
 }
 
+/* Shown while the chart is zoomed (hide by default via the `hidden` attribute) */
+.zoom-hint {
+    margin: 3px 0 0;
+    font-size: 11.5px;
+    font-weight: 550;
+    color: var(--accent);
+    letter-spacing: 0.01em;
+}
+
 /* ---------- View toggle (Day / Week / Month / Year) ---------- */
 
 .view-toggle {

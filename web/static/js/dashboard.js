@@ -131,13 +131,82 @@
 
     function trendDataSet() {
         var ds = makeDataset('Download trend (Mbps)', 'y-speed', COLORS.downloadTrend, null);
-        ds.borderWidth = 1.5;
+        ds.borderWidth = 2.5;   // a fraction wider than the base lines
         ds.borderDash = [5, 5];
-        ds.tension = 0.4;
+        ds.tension = 0;        // straight (linear) segments, no bezier smoothing
         ds.pointRadius = 0;
         ds.pointHoverRadius = 0;
         return ds;
     }
+
+    /* ---------- Brush zoom (drag on the plot to zoom into ~1h resolution) ---------- */
+
+    // Zoom is stored as a time range (unix seconds) into the unzoomed data,
+    // so a 60s background refresh re-maps the same range onto fresh samples.
+    var zoomState = { active: false, startTs: 0, endTs: 0 };
+    var fullData = null; // last API payload for the current view, unzoomed
+
+    function pad2(n) { return (n < 10 ? '0' : '') + n; }
+
+    // Hour-resolution label: HH:MM, prefixed with the day when the date
+    // rolls over between consecutive points ("28 Sep 00:05").
+    function hiResLabel(k, tsArray) {
+        var d = new Date(tsArray[k] * 1000);
+        var hm = pad2(d.getHours()) + ':' + pad2(d.getMinutes());
+        if (k > 0) {
+            var p = new Date(tsArray[k - 1] * 1000);
+            if (p.getDate() === d.getDate() && p.getMonth() === d.getMonth()) { return hm; }
+        }
+        return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) + ' ' + hm;
+    }
+
+    function zoomRange(data) {
+        var n = data.ts.length;
+        if (!zoomState.active || n === 0) { return { i0: 0, i1: Math.max(n - 1, 0), hiRes: false }; }
+        var i0 = 0, i1 = n - 1, found = false, j, k;
+        for (k = 0; k < n; k++) { if (data.ts[k] >= zoomState.startTs) { i0 = k; found = true; break; } }
+        if (!found) { i0 = n - 1; }
+        for (j = n - 1; j >= 0; j--) { if (data.ts[j] <= zoomState.endTs) { i1 = j; break; } }
+        if (i1 - i0 < 1) { return { i0: 0, i1: Math.max(n - 1, 0), hiRes: false }; }
+        return { i0: i0, i1: i1, hiRes: true };
+    }
+
+    function updateZoomHint() {
+        var hint = document.getElementById('zoom-hint');
+        if (hint) { hint.hidden = !zoomState.active; }
+    }
+
+    // Selection rectangle drawn while the mouse button is held down, and
+    // keeps the tooltip suppressed for the duration of a brush drag
+    // (no button pressed = normal tooltip, button pressed = selection tool).
+    var brushPlugin = {
+        id: 'bgtZoomBrush',
+        afterEvent: function (chart, args) {
+            if (chart.$bgtDragging && (args.event.type === 'mousemove' || args.event.type === 'mouseout')) {
+                chart.tooltip.setActiveElements([], {});
+                args.changed = true;
+            }
+        },
+        afterDatasetsDraw: function (chart) {
+            var b = chart.$bgtBrush;
+            if (!b) { return; }
+            var area = chart.chartArea;
+            var c = chart.ctx;
+            var left = Math.max(area.left, Math.min(b.x0, b.x1));
+            var right = Math.min(area.right, Math.max(b.x0, b.x1));
+            var height = area.bottom - area.top;
+            c.save();
+            c.beginPath();
+            c.rect(area.left, area.top, area.right - area.left, height);
+            c.clip();
+            c.fillStyle = 'rgba(56, 189, 248, 0.14)';
+            c.fillRect(left, area.top, right - left, height);
+            c.fillStyle = 'rgba(56, 189, 248, 0.8)';
+            c.fillRect(left, area.top, 1, height);
+            c.fillRect(right - 1, area.top, 1, height);
+            c.restore();
+        }
+    };
 
     var ctx = document.getElementById('combinedChart').getContext('2d');
 
@@ -152,6 +221,7 @@
                 makeDataset('Ping (ms)', 'y-ping', COLORS.ping, null)
             ]
         },
+        plugins: [brushPlugin],
         options: {
             responsive: true,
             maintainAspectRatio: false,
@@ -260,7 +330,41 @@
         }
     });
 
-    /* ---------- Data loading ---------- */
+    /* ---------- Data loading (zoom-aware) ---------- */
+
+    function applyChartData(data) {
+        // The full dataset is always kept unzoomed; the visible slice is
+        // derived from zoomState so a background refresh re-maps the exact
+        // same time range onto fresh samples.
+        fullData = data;
+        var range = zoomRange(data);
+        var slice = function (arr) {
+            return range.hiRes ? arr.slice(range.i0, range.i1 + 1) : arr;
+        };
+        combinedChart.data.labels = range.hiRes
+            ? data.ts.slice(range.i0, range.i1 + 1).map(function (t, i) { return hiResLabel(range.i0 + i, data.ts); })
+            : data.dates;
+        combinedChart.data.datasets[0].data = slice(data.downloads);
+        // Faint trend line: rolling average of the full downloads first, then
+        // slice — so the trend near the edges of the zoomed range is based
+        // on real neighbours, not just visible samples.
+        var trendWindow = Math.max(3, Math.min(25, Math.round(data.downloads.length * 0.02)));
+        combinedChart.data.datasets[1].data = slice(movingAverage(data.downloads, trendWindow));
+        combinedChart.data.datasets[2].data = slice(data.uploads);
+        combinedChart.data.datasets[3].data = slice(data.pings);
+        combinedChart.update('none'); // no animation flicker on refresh
+
+        fillStatCards(data.last_test);
+
+        var days = (typeof data.days === 'number') ? data.days : 0;
+        setText('days-range', subtitleFor(days));
+        if (zoomState.active) {
+            setStatusPill('live', hiResLabel(range.i0, data.ts) + ' – ' + hiResLabel(range.i1, data.ts));
+        } else {
+            setStatusPill('live', data.dates[0] + ' – ' + data.dates[data.dates.length - 1]);
+        }
+        updateZoomHint();
+    }
 
     async function refreshData() {
         try {
@@ -269,24 +373,10 @@
             var data = await res.json();
 
             var hasData = Array.isArray(data.dates) && data.dates.length > 0;
-
             if (hasData) {
-                combinedChart.data.labels = data.dates;
-                combinedChart.data.datasets[0].data = data.downloads;
-                // Faint trend line: rolling average of the downloads, with a
-                // window that scales with the number of samples (3–25).
-                var trendWindow = Math.max(3, Math.min(25, Math.round(data.downloads.length * 0.02)));
-                combinedChart.data.datasets[1].data = movingAverage(data.downloads, trendWindow);
-                combinedChart.data.datasets[2].data = data.uploads;
-                combinedChart.data.datasets[3].data = data.pings;
-                combinedChart.update('none'); // no animation flicker on refresh
-
-                fillStatCards(data.last_test);
-
-                var days = (typeof data.days === 'number') ? data.days : 0;
-                setText('days-range', subtitleFor(days));
-                setStatusPill('live', data.dates[0] + ' – ' + data.dates[data.dates.length - 1]);
+                applyChartData(data);
             } else {
+                fullData = null;
                 fillStatCards(null);
                 setStatusPill(null, 'No data yet — waiting for the first test…');
             }
@@ -296,7 +386,82 @@
         }
     }
 
-    /* ---------- View toggle (Day / Week / Month / Year) ---------- */
+    /* ---------- Brush zoom: drag on the plot to select a range ---------- */
+
+    var MIN_BRUSH_PX = 8; // ignore near-clicks; keep accidental tooltip taps clean
+
+    function canvasXY(evt) {
+        var area = combinedChart.chartArea;
+        if (!area) { return null; }
+        var rect = combinedChart.canvas.getBoundingClientRect();
+        var x = evt.clientX - rect.left;
+        var y = evt.clientY - rect.top;
+        if (x < area.left || x > area.right || y < area.top || y > area.bottom) { return null; }
+        return { x: x, y: y };
+    }
+
+    function xToTs(x) {
+        // Linear interpolation over the visible (possibly sliced) samples to
+        // recover a unix-second range into the unzoomed data.
+        var n = combinedChart.data.labels.length;
+        if (!fullData || !n) { return null; }
+        var range = zoomRange(fullData);
+        var x0 = combinedChart.scales.x.getPixelForValue(0);
+        var x1 = combinedChart.scales.x.getPixelForValue(n - 1);
+        if (x1 === x0) { return fullData.ts[range.i0]; }
+        var frac = (x - x0) / (x1 - x0);
+        var idx = range.i0 + frac * (range.i1 - range.i0);
+        idx = Math.max(range.i0, Math.min(range.i1, idx));
+        var a = Math.floor(idx), b = Math.ceil(idx);
+        if (a === b) { return fullData.ts[a]; }
+        return fullData.ts[a] + (idx - a) * (fullData.ts[b] - fullData.ts[a]);
+    }
+
+    combinedChart.canvas.style.cursor = 'crosshair';
+
+    combinedChart.canvas.addEventListener('mousedown', function (evt) {
+        if (evt.button !== 0) { return; }
+        if (!fullData) { return; }
+        var p = canvasXY(evt);
+        if (!p) { return; }
+        combinedChart.$bgtDragging = true;
+        combinedChart.$bgtBrush = { x0: p.x, x1: p.x };
+        combinedChart.render();
+    });
+
+    window.addEventListener('mousemove', function (evt) {
+        var chart = combinedChart;
+        if (!chart.$bgtDragging) { return; }
+        var p = canvasXY(evt);
+        if (p) { chart.$bgtBrush.x1 = p.x; }
+        chart.render();
+    });
+
+    window.addEventListener('mouseup', function () {
+        var chart = combinedChart;
+        if (!chart.$bgtDragging) { return; }
+        chart.$bgtDragging = false;
+        var b = chart.$bgtBrush;
+        chart.$bgtBrush = null;
+        if (!b || Math.abs(b.x1 - b.x0) < MIN_BRUSH_PX) { chart.render(); return; } // treat as a click/tooltip
+
+        var tsA = xToTs(Math.min(b.x0, b.x1));
+        var tsB = xToTs(Math.max(b.x0, b.x1));
+        if (tsA == null || tsB == null || tsB - tsA < 120) { chart.render(); return; }
+        zoomState = { active: true, startTs: Math.min(tsA, tsB), endTs: Math.max(tsA, tsB) };
+        if (fullData) { applyChartData(fullData); } else { refreshData(); }
+        chart.render();
+    });
+
+    /* ---------- Zoom reset ---------- */
+
+    function clearZoom() {
+        if (!zoomState.active) { return; }
+        zoomState = { active: false, startTs: 0, endTs: 0 };
+        if (fullData) { applyChartData(fullData); }
+    }
+
+    /* ---------- View toggle (Day / Week / Month / Year = unzoom) ---------- */
 
     var toggleButtons = Array.prototype.slice.call(document.querySelectorAll('.view-toggle button'));
 
@@ -309,7 +474,12 @@
     toggleButtons.forEach(function (btn) {
         btn.addEventListener('click', function () {
             var view = btn.getAttribute('data-view');
-            if (!view || view === currentView) { return; }
+            if (!view) { return; }
+
+            // Clicking any view button always unzooms, per UX spec.
+            clearZoom();
+
+            if (view === currentView) { return; } // already the right window: unzoom alone is sufficient
             currentView = view;
             try { localStorage.setItem(VIEW_KEY, view); } catch (e) { /* ignore */ }
             setActiveButton(view);
